@@ -1,0 +1,96 @@
+---
+title: "sp_groupwork1"
+output: html_document
+date: "2022-09-30"
+---
+
+```{r 3}
+setwd("D:/1999Faye/Postgraduate/SP_Statistical_Programming/Group_work1")
+
+a <- scan(file = "pg10.txt", what="character",skip=104)
+n <- length(a)
+a <- a[-((n-2886):n)] ## strip license
+a <- a[-grep("[0123456789]:[0123456789]",a)] ## strip out verse numbers
+
+
+```
+
+```{r 4}
+
+b <- a[1:50]
+
+```
+
+```{r 5}
+split_punct <- function(prun,b){
+  results <- grep(prun, b, value = F)
+  results # which elements of a have the punc
+  newa <- rep("",length(results)+length(b)) ## vector to store the punc
+  iis <- results+1:length(results)
+  if(length(iis)==0){newa = b} else{
+  newa[-iis] <- b
+  for (i in 1:length(results)) {
+    newa[iis[i]] <- substr(b[results[i]],nchar(b[results[i]]),nchar(b[results[i]]))
+    newa[iis[i]-1] <- substr(b[results[i]],1,nchar(b[results[i]])-1)
+  }
+  }
+  return(newa)
+}
+
+word <- split_punct('[.,:?!;]',b)
+```
+
+
+```{r 6}
+unique_words <- unique(tolower(word))
+unique_words
+matchnum <- match(tolower(word),unique_words)
+matchnum
+t <- tabulate(matchnum)
+
+twithwords <- data.frame(t,unique_words)
+rank <- twithwords[order(twithwords$t, decreasing= T), ]
+
+
+
+top500 <- rank[1:10,2]  #Finding the 500 most frequent words 
+top500
+```
+
+
+```{r 7ab}
+Words500 <- match(tolower(word), top500)
+Words500
+
+
+coindex <- grep("[0-9]", Words500, value = F)
+coindex
+
+
+
+
+t <- cbind(coindex, coindex+1, coindex+2)
+t
+
+
+
+index <- cbind(coindex,Words500[coindex], Words500[coindex+1], Words500[coindex+2])
+index
+
+
+
+
+
+```
+
+
+```{r 7c}
+a <- is.na(rowSums(index))
+validrows <- which(a == "FALSE")
+
+index <- index[validrows,]
+index
+
+
+
+```

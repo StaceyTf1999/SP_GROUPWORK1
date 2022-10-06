@@ -31,7 +31,7 @@ for (i in 1:length(results)) {
 }
 
 # q4
-
+# delete the fixed = TRUE and change the answer of q5!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # for insurance, if a punctuation is not included, newa = b
 split_punct <- function(prun,b){
   results <- grep(prun, b,fixed = TRUE, value = F)
@@ -66,12 +66,35 @@ t <- tabulate(matched)
 # try to use cbind instead of dataframe!!!!!!!!!!!!!
 twithwords <- data.frame(t,unique_words)
 rank <- twithwords[order(twithwords$t, decreasing= T), ]
-top500 <- rank[1:300,2]
+# find the threshold so that m is near 500
+for (i in 200:150) {
+  top500 <- rank[which(t>i),2]
+  if (length(top500)>=500){
+    cat('The threshold is',i)
+    break
+  }
+}
+
+
+# for q10, gain the word with a capital letter
+capital_words <- grep('[LETTERS]', b, value = T)
+ucw <- unique(capital_words)
+ucw <- data.frame(num = tabulate(match(b, ucw)),ucw)
+rank_c <- ucw[order(ucw$num, decreasing= T),]
+# we extract the same proportion of capital words as b (501/13106)
+prop <- floor(nrow(rank_c)*length(top500)/nrow(rank))
+rank_c <- rank_c[1:prop,]
+modi_b <- c(top500,rank_c[,2])
+
 
 
 # q7
 lowerb <- tolower(b)
-mmm <- match(lowerb,top500) # 21NA
+mmm <- match(lowerb,top500)
+
+# for q10, match the modified b (with capital words) with the bible
+mmm <- match(b,modi_b)
+
 # find the index of each top words on the bible
 indexmm <- grep('[1-9]', mmm,value = F)
 
@@ -121,32 +144,42 @@ uniq <- cbind(uniq,paste(uniq[,1], uniq[,2], uniq[,3]))
 #   }
 #   }
 # }
-freqt <- c()
-for (i in 1:nrow(uniq)) {
-  freqt[i] <- length(which(twords[,5]==uniq[i,4]))
-}
-ttt <- cbind(uniq[,1:3],freqt)
 
+# takes a long time using the loop...!!!!!!!!!!!!!!!!!!!!!!!!
+# freqt <- c()
+# for (i in 1:nrow(uniq)) {
+#   freqt[i] <- length(which(twords[,5]==uniq[i,4]))
+# }
+# ttt <- cbind(uniq[,1:3],freqt)
+tmatch <- match(twords[,5], uniq[,4])
+ttt <- cbind(uniq[,1:3],tabulate(tmatch))
+ttt
 
 
 # e
 
 # sample(ttt,size=20,replace=T,prob=c(0.8,0.2))
 
-# q7 a, swords change to awords
-swords <- cbind(indexmm,mmm[indexmm],mmm[indexmm+1])
-swords <- swords[which(is.na(rowSums(swords))==F),]
-swords <- cbind(swords,paste(swords[,2], swords[,3]))
+# q7 a, swords change to awords!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+awords <- cbind(indexmm,mmm[indexmm],mmm[indexmm+1])
+awords <- awords[which(is.na(rowSums(awords))==F),]
+awords <- cbind(awords,paste(awords[,2], awords[,3]))
 
-uniq <- unique(swords[,2:3])
+uniq <- unique(awords[,2:3])
 uniq <- cbind(uniq,paste(uniq[,1], uniq[,2]))
 
-freqa <- c()
-for (i in 1:nrow(uniq)) {
-  freqa[i] <- length(which(swords[,4]==uniq[i,3]))
-}
-aaa <- cbind(uniq[,1:2],freqa)
+# takes a long time using the loop...!!!!!!!!!!!!!!!!!!!!!!!!
+# freqa <- c()
+# for (i in 1:nrow(uniq)) {
+#   freqa[i] <- length(which(awords[,4]==uniq[i,3]))
+# }
+# aaa <- cbind(uniq[,1:2],freqa)
 
+# find the frequence without using a loop
+
+amatch <- match(awords[,4], uniq[,3])
+aaa <- cbind(uniq[,1:2],tabulate(amatch))
+aaa
 
 # q7 s
 
@@ -163,11 +196,16 @@ uniq <- unique(swords[,2])
 #     }
 #   }
 # }
-freqs <- c()
-for (i in 1:length(uniq)) {
-  freqs[i] <- length(which(swords[,2]==uniq[i]))
-}
-sss <- cbind(uniq,freqs)
+# takes a long time using the loop...!!!!!!!!!!!!!!!!!!!!!!!!
+# freqs <- c()
+# for (i in 1:length(uniq)) {
+#   freqs[i] <- length(which(swords[,2]==uniq[i]))
+# }
+# sss <- cbind(uniq,freqs)
+smatch <- match(swords[,2], uniq)
+sss <- cbind(uniq,tabulate(smatch))
+sss
+
 
 
 
@@ -177,19 +215,26 @@ sss <- cbind(uniq,freqs)
 ii <- sample(sss[,1],size=1,replace=T,prob=sss[,2])
 ii
 
+# for q10, the first word should be selected form capital words
+
+ii <- sample(rank_c[,2],size=1,replace=T,prob=rank_c[,1])
+ii <- which(modi_b==ii)
+
+
 # add probability
-aaa <- cbind(aaa,pro = freqa/sum(freqa)) # remember to remove the #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 aaa <- apply(aaa,2,as.numeric)
+aaa <- cbind(aaa,pro = aaa[,3]/sum(aaa[,3])) # remember to remove the #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 aaa <- as.data.frame(aaa)
 # merge(aaa,freqa)
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ttt <- apply(ttt,2,as.numeric)
-ttt <- cbind(ttt,pro = freqt/sum(freqt)) # remember to remove the #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ttt <- cbind(ttt,pro = ttt[,4]/sum(ttt[,4])) # remember to remove the #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ttt <- as.data.frame(ttt)
 ttt
 # select the second word
 kk <- aaa[which(aaa[,1]==ii),]
 kk <- sample(kk[,2],size=1,replace=T,prob=kk[,4])
+
 
 
 # select the third word
@@ -227,19 +272,40 @@ for(i in 1:48){
 }
 
 # show the sentence
-
 print(top500[sent])
-
 sent <- paste(top500[sent],collapse=" ")
 
-sent <- gsub(" .",".",gsub(" ,",",",sent,fixed=TRUE),fixed=TRUE)
+# used to remove the space before a prun
+remove_space <- function(senten){
+  for (i in c('.',',',':','?','!',';')){
+    prun_space <- paste('',i)
+    senten <- gsub(prun_space,i,senten,fixed=TRUE)
+  }
+  return(senten)
+}
+
+sent <- remove_space(sent)
 cat(sent)
 
 # q9 word sections taken from S
 
 sect <- paste(top500[sample(sss[,1],size=50,replace=T,prob=sss[,2])],collapse=" ")
-sect <- gsub(" .",".",gsub(" ,",",",sect,fixed=TRUE),fixed=TRUE)
+sect <- remove_space(sect)
 cat(sect)
+
+# q10 
+
+sent <- paste(modi_b[sent],collapse=" ")
+sent <- remove_space(sent)
+cat(sent)
+
+
+
+
+
+
+
+
 
 
 
